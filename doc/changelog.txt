@@ -1,0 +1,10 @@
+* playing around with various method invocation methods:
+  - using the directly stack-pointer to access locals!
+  - (ab)using the frame-pointer? rather pass args as c-args!
+    therefore not having to worry about how gcc does optimize the code...
+* minimizing ammount of registers that are saved and restored -> 
+  therefore don't use variables before and after method calls inside method_context
+* map method_function to message sends (prototype 1)
+* organize opcodes as goto labels inside method_context function
+* starting to use cmockery
+* getting dictionaries to run. implementing initial grow.

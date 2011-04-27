@@ -1,0 +1,4 @@
+- threaded execution within functions
+- mapping message sends to c-functions
+- using normal c-stack to store locals
+- organize stack to ease jit-compilation later on
