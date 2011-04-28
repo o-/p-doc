@@ -15,7 +15,7 @@ void * move_local;
 void * load_arg;
 void * return_;
 
-void mth(Method method, void** arg)
+int mth(Method method, void** arg)
 {
     //only used on the first call. export all goto-labels to be used outside mth.
     if (arg==NULL)
@@ -51,9 +51,10 @@ print:
 call_method:
     origin = (unsigned long)pc[1];
     offset = (unsigned long)pc[2];
-    pc += 3;
     //all locals after offset are arguments to the callee.
     mth( (Method)stack_pointer[origin], &stack_pointer[offset] );
+    origin = offset = NULL;
+    pc += 3;
     goto **pc;
 
 move_local:
@@ -72,7 +73,7 @@ load_arg:
 
 return_:
     printf("return from %p\n",method);
-    return;
+    return 0;
 }
 
 int main()
@@ -130,6 +131,6 @@ int main()
     arg[0] = (void**)2;
     arg[1] = m2;
 
-    mth(m, arg);
+    return mth(m, arg);
 
 }

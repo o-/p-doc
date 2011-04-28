@@ -1,0 +1,1 @@
+* manage locals in c-stack frame
