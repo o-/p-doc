@@ -1,0 +1,100 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usetheme{Copenhagen}
+\title[Pinocchio on Speed]{Pinocchio on Speed \\ Towards a dynamic, self sustainable, native Smaltalk implementation}
+\author{Oli Flückiger}
+\institute{scg.unibe.ch}
+\date{May 17, 2011}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Layout}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
+
+\begin{document}
+
+
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+
+\begin{frame}{Solid ground?}
+     \begin{center}\includegraphics[width=0.5\textwidth]{muenchhausen.png}\end{center}
+\end{frame}
+
+\section{Previous implementations}
+
+\begin{frame}[fragile]
+    \frametitle{The old Pinocchio VM}
+    \begin{lstlisting}
+void op_move {
+    origin = UNS_INT_OPERAND(2);
+    target = UNS_INT_OPERAND(1);
+    STORE(target, value);
+    JUMP(3);
+}
+
+    ...
+
+program_counter = &method_code;
+for (;;) {
+    (*program_counter)();
+}
+    \end{lstlisting}
+\end{frame}
+
+\section{Removing cpu-instructions}
+
+\begin{frame}[fragile]
+    \frametitle{Threaded execution - First prototype}
+    \begin{lstlisting}
+
+void ** pc = method->code;
+goto **pc;
+            
+    ...
+
+load_argument:
+    origin = pc[1];
+    target = pc[2];
+    locals[target] = arg[origin];
+    goto **( pc += 3 );
+
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Mapping message sends to C functions}
+    \begin{lstlisting}
+
+int mth(Method method, void** arg) {
+
+    register void ** stack_pointer __asm("rsp");
+    alloca(method->locals * sizeof(void*));
+
+        ...
+
+    call_method:
+        callee    = pc[1];
+        arguments = pc[2]; 
+        mth( stack_pointer[callee], &stack_pointer[arguments] );
+        goto **( pc += 3 );
+
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}{GCC and the art of persuasion}
+\end{frame}
+
+\section{Kill the VM}
+
+\section{To boldly go where...}
+
+\end{document}
