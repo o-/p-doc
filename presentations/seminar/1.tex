@@ -178,6 +178,7 @@ int mth(Method method, void** arg) {
     \end{itemize}
 \end{frame}
 
+\section{The compiler framework}
 
 \lstset{language=Smalltalk}
 
@@ -233,6 +234,12 @@ linearScanRegisterAllocation
         self nextFreeRegisterFor: interval variable.  
         active add: interval ]].
     \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Some examples III}
+    {\bf Developing}
+    \begin{center}\includegraphics[width=0.9\textwidth]{developing.png}\end{center}
 \end{frame}
 
 \section{Runtime implementation}
