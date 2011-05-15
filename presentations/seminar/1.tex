@@ -31,11 +31,11 @@
 \section{Previous implementations}
 
 \begin{frame}[fragile]
-    \frametitle{The old Pinocchio VM}
+    \frametitle{Migrating codebase to a register VM}
     \begin{lstlisting}
 void op_move {
-    origin = UNS_INT_OPERAND(2);
-    target = UNS_INT_OPERAND(1);
+    origin = OPERAND(2);
+    target = OPERAND(1);
     STORE(target, value);
     JUMP(3);
 }
@@ -75,7 +75,7 @@ load_argument:
 
 int mth(Method method, void** arg) {
 
-    register void ** stack_pointer __asm("rsp");
+    register void ** sp __asm("rsp");
     alloca(method->locals * sizeof(void*));
 
         ...
@@ -83,17 +83,117 @@ int mth(Method method, void** arg) {
     call_method:
         callee    = pc[1];
         arguments = pc[2]; 
-        mth( stack_pointer[callee], &stack_pointer[arguments] );
+        mth( sp[callee], &sp[arguments] );
         goto **( pc += 3 );
 
 }
     \end{lstlisting}
 \end{frame}
 
-\begin{frame}{GCC and the art of persuasion}
+\begin{frame}[fragile]
+    \frametitle{Compilers and the art of persuasion}
+    Problems with compiled code:
+    \begin{itemize}
+        \item Changing stuff is always based on guesswork what the compiler might 
+                actually do with the code.
+        \item Caching within opcode evaluation (e.g. self = \%rbp + 1). Therefore registers
+              will be saved on {\em each} opcode evaluation
+        \item Various details are crucial for speed: 
+                e.g. frame pointer couldn't be ommited even tough we know the frame size.
+    \end{itemize}
 \end{frame}
 
 \section{Kill the VM}
+
+\begin{frame}[fragile]
+    \frametitle{Observations}
+    \begin{itemize}
+        \item The VM had only few instructions
+        \item Only complex opcodes were message sends and block evaluation
+        \item JIT compilation as a (near) future goal
+        \item So message send behaviour (e.g. stack usage) should match the cpu supported call/leave
+        \item Therefore those instructions have to be implemented very specific anyway
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Conclusions}
+    {\bf Pinocchio self sustainable - \\Compile directly to machine code!}
+    \begin{itemize}
+        \item The old VM opcodes can be replaced by a few machine instructions
+        \item The VM can be replaced by a compiler framework
+        \item All compiler steps and all intermediate representations can 
+            be implemented in a clean and polymorphic way using Smalltalk objects.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Some examples I}
+    {\bf compiling a message send}
+    \begin{lstlisting}
+
+receiverTmp := receiver accept: self.
+    
+arguments withIndexDo: [ :arg :index |
+    evaluatedArguments 
+        at: index 
+        put: (arg accept: self) ].
+    
+arguments withIndexDo: [ :arg :index |
+    builder
+        assign: (evaluatedArguments at: index)
+        to: (self arg: index + 2 of: argsize) ].
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Some examples I}
+    {\bf compiling a message send (cont.)}
+    \begin{lstlisting}
+    
+builder 
+    assign: receiverTemp 
+    to: ( self arg: 2 of: argsize ).
+builder 
+    indirectLoadConstant: message selector 
+    into: ( self arg: 1 of: argsize ).
+        
+builder invoke.
+
+ret := builder nextTemp.
+builder assign: self resultVariable to: ret.
+
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Some examples II}
+    {\bf allocating registers}
+    \begin{lstlisting}
+linearScanRegisterAllocation
+  liveness do: [ :interval |
+    self expireIntervalsBefore: interval start.
+    (active size == self numberOfRegisters)
+      ifTrue: [ self spill: interval ]
+      ifFalse: [ 
+        self nextFreeRegisterFor: interval variable.  
+        active add: interval ]].
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Advantages}
+    {\bf Play nice with the system}
+    \begin{itemize}
+        \item Access to C libraries provides a generic and easy interface to the operating system
+        \item And: external C functions can be linked and used to implement native functions
+        \item Of course in the end natives should be compiled with our own 
+                compiler generating static code
+        \item This compiler can be implemented directly as an extension to the current compiler
+        \item The complete compiler framework is directly accessible within Pinocchio runtime
+        \item JIT is just another usecase...
+    \end{itemize}
+\end{frame}
 
 \section{To boldly go where...}
 
