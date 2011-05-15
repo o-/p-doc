@@ -15,6 +15,42 @@
   \end{frame}
 }
 
+
+%%% Smalltalkdefinition f"ur das listings-Paket
+\lstdefinelanguage{Smalltalk}{
+  keywordsprefix=\#,
+  morekeywords={true,false,self,super,nil,thisContext}, 
+  morekeywords={[2]ifTrue,ifFalse,whileTrue,whileFalse,and,or,xor,not,eqv,by,do,timesRepeat,caseOf,otherwise},
+  sensitive=true,
+  morecomment=[s]{"}{"},
+  morestring=[b]',
+  moredelim=**[is][\itshape]{/+}{+/}, % benutzt f"ur tempor"are Variablen
+  style=SmalltalkStyle
+}
+\lstdefinestyle{SmalltalkStyle}{
+  tabsize=4,
+%  frame=leftline,
+%  frame=bl,
+  framerule=2pt,
+  rulecolor=\color{gray},
+%  backgroundcolor=\color{white},
+  backgroundcolor=\usebeamercolor[bg]{listing},
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle={[2]\color{gray!70!black}\bfseries},
+%  stringstyle=\color{orange},
+  stringstyle=\mdseries\slshape\color{gray!50!black},
+%  commentstyle=\color{brown},
+  commentstyle=\slshape\color{gray},
+  emphstyle={\color{red}\bfseries},
+  emphstyle={[2]\color{red}},
+  emphstyle={[3]\color{blue}\bfseries},
+  emphstyle={[4]\color{blue}},
+  literate={\ _\ }{{$\gets$}}3{^}{{$\uparrow$}}1
+%  literate={:=}{{$\gets$}}1{^}{{$\uparrow$}}1
+%  literate={^}{{$\uparrow$}}1
+} 
+
+
 \begin{document}
 
 
@@ -23,12 +59,13 @@
 \titlepage
 \end{frame}
 
-
-\begin{frame}{Solid ground?}
-     \begin{center}\includegraphics[width=0.5\textwidth]{muenchhausen.png}\end{center}
+\begin{frame}
+\begin{center}\includegraphics[width=0.5\textwidth]{muenchhausen.png}\end{center}
 \end{frame}
 
 \section{Previous implementations}
+
+\lstset{language=C}
 
 \begin{frame}[fragile]
     \frametitle{Migrating codebase to a register VM}
@@ -127,6 +164,8 @@ int mth(Method method, void** arg) {
     \end{itemize}
 \end{frame}
 
+\lstset{language=Smalltalk}
+
 \begin{frame}[fragile]
     \frametitle{Some examples I}
     {\bf compiling a message send}
@@ -195,6 +234,53 @@ linearScanRegisterAllocation
     \end{itemize}
 \end{frame}
 
+\section{Runtime implementation}
+
+\begin{frame}[fragile]
+    \frametitle{Early bound - late bound}
+    {\bf Memory layout }
+    \begin{center}\includegraphics[width=0.6\textwidth]{memory.pdf}\end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Late bound variables}
+    {\bf self inspect: foo }
+    \begin{itemize}
+        \item What is foo?
+        \item Class can only be determined at runtime! 
+        \item (Almost) everything is late bound in Smalltalk
+    \end{itemize}
+\end{frame}
+
 \section{To boldly go where...}
+
+\begin{frame}{How Pinocchio runs itself}
+
+    {\bf MethodDictionary methodDictionary at: \#at}
+
+    \begin{center}\includegraphics[width=0.5\textwidth]{escher.jpg}\end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Inline caches}
+
+    \begin{lstlisting}
+(callee class == MethodDictionary)
+    ifTrue: [ <invoke #MethodDictionary_at> ]
+    ifFalse: [ callee at: arg ]
+    \end{lstlisting}
+
+    \begin{itemize}
+        \item Inline caches store predictions about the callees class directly inside the callers code
+        \item Pointer to the predicted target code is inlined to avoid pipeline stalls
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{From late to early bound}
+        \begin{itemize}
+            \item JIT compilation makes predictions about the class of the callee and installs native code in a polymorphic inline cache
+            \item A MethodDictionary can therefore be implemented by simply hardwiring the inline cache and install a native \#at
+        \end{itemize}
+\end{frame}
 
 \end{document}
