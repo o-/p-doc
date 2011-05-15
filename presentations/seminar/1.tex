@@ -2,7 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
 \usetheme{Frankfurt}
-\title[Pinocchio on Speed]{Pinocchio on Speed \\ Towards a dynamic, self sustainable, native Smaltalk implementation}
+\title[Pinocchio on Speed]{Pinocchio on Speed \\ Towards a dynamic, self sustainable, \\native Smaltalk implementation}
 \author{Oli Flückiger}
 \institute{scg.unibe.ch}
 \date{May 17, 2011}
@@ -20,7 +20,7 @@
 \lstdefinelanguage{Smalltalk}{
   keywordsprefix=\#,
   morekeywords={true,false,self,super,nil,thisContext}, 
-  morekeywords={[2]ifTrue,ifFalse,whileTrue,whileFalse,and,or,xor,not,eqv,by,do,timesRepeat,caseOf,otherwise},
+  morekeywords={[2]ifTrue,ifFalse,whileTrue,whileFalse,and,or,xor,not,eqv,by,do,timesRepeat,caseOf,otherwise,withIndexDo},
   sensitive=true,
   morecomment=[s]{"}{"},
   morestring=[b]',
@@ -63,12 +63,12 @@
 \begin{center}\includegraphics[width=0.7\textwidth]{muenchhausen.png}\end{center}
 \end{frame}
 
-\section{Previous implementations}
+\section{Old Pinocchio}
 
 \lstset{language=C}
 
 \begin{frame}[fragile]
-    \frametitle{Migrating codebase to a register VM}
+    \frametitle{Migrating previous codebase to a register based VM}
     \begin{lstlisting}
 void op_move {
     origin = OPERAND(2);
@@ -86,7 +86,7 @@ for (;;) {
     \end{lstlisting}
 \end{frame}
 
-\section{Removing cpu-instructions}
+\section{Speed up}
 
 \begin{frame}[fragile]
     \frametitle{Threaded execution - First prototype}
@@ -129,14 +129,14 @@ int mth(Method method, void** arg) {
 
 \begin{frame}[fragile]
     \frametitle{Compilers and the art of persuasion}
-    Problems with compiled code:
+    {\bf Problems with compiling VMs}
     \begin{itemize}
-        \item Changing stuff is always based on guesswork what the compiler might 
-                actually do with the code.
-        \item Caching within opcode evaluation (e.g. self = \%rbp + 1). Therefore registers
-              will be saved on {\em each} opcode evaluation
+        \item Optimizing execution inside the C code is merely guessing what the compiler might 
+                actually do with the code
+        \item We therefore implemented hacks to persuade GCC to compile to specific instructions, which broke again with the next modification
+        \item Caching (e.g. self is always \%rbp + 1) can hurt performance
         \item Various details are crucial for speed: 
-                e.g. frame pointer couldn't be ommited even tough we know the frame size.
+                e.g. frame pointer couldn't be ommited even though we know the frame size
     \end{itemize}
 \end{frame}
 
@@ -146,9 +146,9 @@ int mth(Method method, void** arg) {
     \frametitle{Observations}
     \begin{itemize}
         \item The VM had only few instructions
-        \item Only complex opcodes were message sends and block evaluation
-        \item JIT compilation as a (near) future goal
-        \item So message send behaviour (e.g. stack usage) should match the cpu supported call/leave
+        \item The only complex opcodes were message sends and block evaluation
+        \item JIT compilation is a (near) future goal
+        \item So the behaviour of method invocation (e.g. stack usage) should match the cpu supported call/leave closely
         \item Therefore those instructions have to be implemented very specific anyway
     \end{itemize}
 \end{frame}
@@ -158,23 +158,23 @@ int mth(Method method, void** arg) {
     {\bf Pinocchio self sustainable - \\Compile directly to machine code!}
     \begin{itemize}
         \item The old VM opcodes can be replaced by a few machine instructions
-        \item The VM can be replaced by a compiler framework
+        \item We think the VM can be replaced completely by a compiler framework
         \item All compiler steps and all intermediate representations can 
             be implemented in a clean and polymorphic way using Smalltalk objects.
+        \item Code can be written out as ELF binary which can be linked with
+            arbitrary libraries.
     \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Advantages}
+    \frametitle{Advantages so far...}
     {\bf Play nice with the system}
     \begin{itemize}
         \item Access to C libraries provides a generic and easy interface to the operating system
         \item And: external C functions can be linked and used to implement native functions
-        \item Of course in the end natives should be compiled with our own 
-                compiler generating static code
-        \item This compiler can be implemented directly as an extension to the current compiler
-        \item The complete compiler framework is directly accessible within Pinocchio runtime
-        \item JIT is just another usecase...
+        \item The complete compiler framework is directly accessible within Smalltalk
+        \item Rapid development progress since we can use a high level language
+        \item Fast execution, less overhead than interpretation, even with semi-optimal code generation!
     \end{itemize}
 \end{frame}
 
@@ -223,6 +223,13 @@ builder assign: self resultVariable to: ret.
 
 \begin{frame}[fragile]
     \frametitle{Some examples II}
+    {\bf Developing}
+    \begin{center}\includegraphics[width=0.9\textwidth]{developing.png}\end{center}
+    hmm something is broken here. 2x self := ...
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Some examples III}
     {\bf allocating registers}
     \begin{lstlisting}
 linearScanRegisterAllocation
@@ -236,18 +243,50 @@ linearScanRegisterAllocation
     \end{lstlisting}
 \end{frame}
 
+
+\section{The Runtime}
+
 \begin{frame}[fragile]
-    \frametitle{Some examples III}
-    {\bf Developing}
-    \begin{center}\includegraphics[width=0.9\textwidth]{developing.png}\end{center}
+    \frametitle{Down to business}
+    \begin{itemize}
+        \item Compiling a Method:
+        \begin{itemize}
+            \item Parser generates AST
+            \item Generate TAC, inlineing some control constructs (ifTrue, while)
+            \item Conservative liveness analysis
+            \item Linear Scan Register Allocation
+            \item Postcompilation, optimizations
+            \item Assembling
+            \item Writing out ELF
+            \item Linking
+        \end{itemize}
+        \item Running the generated binary:
+        \begin{itemize}
+            \item Loading the code, exporting symbols, loading global literals (done by the kernel)
+            \item Run initialization method loading Objects into memory
+        \end{itemize}
+        \item The loaded code itself could include the compiler, therefore beeing able to modify code, write out another ELF file or an image
+    \end{itemize}
 \end{frame}
 
-\section{Runtime implementation}
-
 \begin{frame}[fragile]
-    \frametitle{Big picture}
+    \frametitle{Memory Layout}
     {\bf Memory layout }
     \begin{center}\includegraphics[width=0.9\textwidth]{memory.pdf}\end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{The main idea}
+    {\bf All parts of this puzzle should be implemented by normal Smalltalk objects: }
+    \begin{itemize}
+        \item Compiler
+        \item Assembler
+        \item Object Layouts
+        \item MethodDictionary
+        \item Garbage Collector
+        \item (Integers)
+        \item Anything.... 
+    \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -284,11 +323,49 @@ linearScanRegisterAllocation
     \end{itemize}
 \end{frame}
 
-\begin{frame}{From late to early bound}
+\lstset{language=C}
+
+\begin{frame}[fragile]
+    \frametitle{More on inline caches}
+
+    {\bf Sketched implementation of a polymorphic inline cache at assembler level}
+
+    \begin{lstlisting}
+
+add:
+1:    ( callee_class == Integer   )   call: &1234
+2:    ( callee_class == Character )   call: &1235
+3:    ( callee_class == String    )   call: &1236
+4:      "empty inline cache"
+
+      jump: &invoke_method
+
+invoke_method:
+      address = lookup( callee_class, add )
+      add_inline_cache( caller, 4, callee_class, address )
+      call: &address
+
+    \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}{JIT implementation made easy}
         \begin{itemize}
-            \item JIT compilation makes predictions about the class of the callee and installs native code in a polymorphic inline cache
-            \item A MethodDictionary can therefore be implemented by simply hardwiring the inline cache and install a native \#at
+            \item Determine a often used inline cache
+            \item Compile the called method using the new gained type information about the callee
+            \item Replace the address of this method with native code
         \end{itemize}
 \end{frame}
 
+\begin{frame}{From late to early bound}
+
+    {\bf Natives are just hardwired inline caches with native code generated by the JIT compiler}
+    \begin{itemize}
+            \item A MethodDictionary can therefore be implemented by simply hardwiring the inline cache for \#at
+            \item The \#at method should be compiled assumeing that self always reffers to the current implementation of this particular MethodDictionary
+            \item This ''freezes'' the method in its current state and generates fast native code
+            \item The runtime can do a dictionary lookup without ending up in a self referential loop
+            \item But the implementation doesn't loose its polymorphic behaviour: any MethodDictionary can be replaced by a subclass and almost everything works as expected!
+    \end{itemize}
+\end{frame}
 \end{document}
