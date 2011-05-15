@@ -1,7 +1,7 @@
 \documentclass{beamer}
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
-\usetheme{Copenhagen}
+\usetheme{Frankfurt}
 \title[Pinocchio on Speed]{Pinocchio on Speed \\ Towards a dynamic, self sustainable, native Smaltalk implementation}
 \author{Oli Flückiger}
 \institute{scg.unibe.ch}
@@ -60,7 +60,7 @@
 \end{frame}
 
 \begin{frame}
-\begin{center}\includegraphics[width=0.5\textwidth]{muenchhausen.png}\end{center}
+\begin{center}\includegraphics[width=0.7\textwidth]{muenchhausen.png}\end{center}
 \end{frame}
 
 \section{Previous implementations}
@@ -164,6 +164,21 @@ int mth(Method method, void** arg) {
     \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+    \frametitle{Advantages}
+    {\bf Play nice with the system}
+    \begin{itemize}
+        \item Access to C libraries provides a generic and easy interface to the operating system
+        \item And: external C functions can be linked and used to implement native functions
+        \item Of course in the end natives should be compiled with our own 
+                compiler generating static code
+        \item This compiler can be implemented directly as an extension to the current compiler
+        \item The complete compiler framework is directly accessible within Pinocchio runtime
+        \item JIT is just another usecase...
+    \end{itemize}
+\end{frame}
+
+
 \lstset{language=Smalltalk}
 
 \begin{frame}[fragile]
@@ -220,26 +235,12 @@ linearScanRegisterAllocation
     \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]
-    \frametitle{Advantages}
-    {\bf Play nice with the system}
-    \begin{itemize}
-        \item Access to C libraries provides a generic and easy interface to the operating system
-        \item And: external C functions can be linked and used to implement native functions
-        \item Of course in the end natives should be compiled with our own 
-                compiler generating static code
-        \item This compiler can be implemented directly as an extension to the current compiler
-        \item The complete compiler framework is directly accessible within Pinocchio runtime
-        \item JIT is just another usecase...
-    \end{itemize}
-\end{frame}
-
 \section{Runtime implementation}
 
 \begin{frame}[fragile]
-    \frametitle{Early bound - late bound}
+    \frametitle{Big picture}
     {\bf Memory layout }
-    \begin{center}\includegraphics[width=0.6\textwidth]{memory.pdf}\end{center}
+    \begin{center}\includegraphics[width=0.9\textwidth]{memory.pdf}\end{center}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -258,7 +259,7 @@ linearScanRegisterAllocation
 
     {\bf MethodDictionary methodDictionary at: \#at}
 
-    \begin{center}\includegraphics[width=0.5\textwidth]{escher.jpg}\end{center}
+    \begin{center}\includegraphics[width=0.7\textwidth]{escher.jpg}\end{center}
 \end{frame}
 
 \begin{frame}[fragile]
