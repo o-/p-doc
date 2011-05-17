@@ -338,12 +338,12 @@ add:
 3:    ( callee_class == String    )   call: &1236
 4:      "empty inline cache"
 
-      jump: &invoke_method
+      call: &invoke_method
 
 invoke_method:
       address = lookup( callee_class, add )
       add_inline_cache( caller, 4, callee_class, address )
-      call: &address
+      jmp: &address
 
     \end{lstlisting}
 

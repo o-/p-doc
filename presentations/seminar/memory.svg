@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.1 r9760"
-   sodipodi:docname="memory.png">
+   sodipodi:docname="memory2.odg">
   <defs
      id="defs4">
     <marker
@@ -317,31 +317,6 @@
          id="tspan5132"
          x="203.85666"
          y="884.28998">Class</tspan></text>
-    <rect
-       style="fill:none;stroke:#000000;stroke-width:0.81156701;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
-       id="rect5128-6"
-       width="66.097527"
-       height="34.279346"
-       x="287.78458"
-       y="867.41949" />
-    <text
-       xml:space="preserve"
-       style="font-size:15.17278957px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-       x="297.30853"
-       y="880.54382"
-       id="text5130-8"
-       sodipodi:linespacing="125%"
-       transform="scale(0.98900377,1.0111185)"><tspan
-         sodipodi:role="line"
-         id="tspan5132-9"
-         x="297.30853"
-         y="880.54382">InstVar</tspan></text>
-    <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend)"
-       d="m 262.87879,159.17441 48.48485,-38.63636"
-       id="path5158"
-       inkscape:connector-curvature="0"
-       transform="translate(0,790.15746)" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend)"
        d="m 222.72727,157.65926 -2.27272,-27.27273"
